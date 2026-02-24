@@ -14,7 +14,7 @@ const initDB = async () => {
       id SERIAL PRIMARY KEY,
       name VARCHAR(100) NOT NULL,
       email VARCHAR(150) UNIQUE NOT NULL CHECK(email = LOWER(email)),
-      password VARCHAR(255) NOT NULL CHECK(LENGTH(password)>= 6),
+      password TEXT NOT NULL CHECK(LENGTH(password)>= 6),
       phone VARCHAR(15),
       role VARCHAR(50) NOT NULL CHECK(role IN ('admin', 'customer')) DEFAULT 'customer'
     );
@@ -36,8 +36,8 @@ const initDB = async () => {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS bookings(
       id SERIAL PRIMARY KEY,
-      customer_id INT REFERENCES users(id) ON DELETE CASCADE,
-      vehicle_id INT REFERENCES vehicles(id) ON DELETE CASCADE,
+      customer_id INT REFERENCES users(id),
+      vehicle_id INT REFERENCES vehicles(id),
       rent_start_date DATE NOT NULL,
       rent_end_date DATE NOT NULL CHECK(rent_end_date > rent_start_date),
       total_price NUMERIC(10,2) NOT NULL CHECK(total_price > 0),
@@ -47,3 +47,6 @@ const initDB = async () => {
 };
 
 export default initDB;
+
+// customer_id INT REFERENCES users(id) ON DELETE CASCADE,
+// vehicle_id INT REFERENCES vehicles(id) ON DELETE CASCADE,

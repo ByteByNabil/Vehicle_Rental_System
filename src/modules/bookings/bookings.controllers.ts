@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { bookingServices } from "./booking.service";
+import { bookingServices } from "./bookings.services";
 
 const createBookings = async (req: Request, res: Response) => {
   const {

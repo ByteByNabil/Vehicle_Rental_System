@@ -1,30 +1,6 @@
 import { Request, Response } from "express";
 import { pool } from "../../config/db";
-import { userServices } from "./user.service";
-
-const createUser = async (req: Request, res: Response) => {
-  const { name, email, password, phone, role } = req.body;
-  try {
-    const result = await userServices.createUser(
-      name,
-      email,
-      password,
-      phone,
-      role,
-    );
-    // console.log(result.rows[0]);
-    res.status(201).json({
-      success: true,
-      message: "Users Created Successfully",
-      data: result.rows[0],
-    });
-  } catch (err: any) {
-    res.status(500).json({
-      success: false,
-      message: err.message || "internal server error",
-    });
-  }
-};
+import { userServices } from "./users.services";
 
 const getAllUsers = async (req: Request, res: Response) => {
   try {
@@ -127,7 +103,7 @@ const deleteUserById = async (req: Request, res: Response) => {
 };
 
 export const userControllers = {
-  createUser,
+  // createUser,
   getAllUsers,
   getUserById,
   updateUserById,
