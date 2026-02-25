@@ -55,7 +55,7 @@ initDB();
  * - Uses logger middleware
  */
 app.get("/", logger, (req: Request, res: Response) => {
-  res.send("Hello Next Level Developers!");
+  res.send("Vehicle Rental System Backend API is running!");
 });
 
 // ===============================
