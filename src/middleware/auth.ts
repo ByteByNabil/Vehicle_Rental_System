@@ -2,52 +2,97 @@ import { NextFunction, Request, Response } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import config from "../config";
 
-// higher order function to wrap and check for authentication of a route
-// roles = ["admin", "user"]
-const auth = (...roles: string[]) => {
+// ===============================
+// AUTHENTICATION & AUTHORIZATION MIDDLEWARE
+// ===============================
+/**
+ * AUTH MIDDLEWARE
+ * - Verifies JWT token
+ * - Attaches authenticated user to req.user
+ * - Performs optional role-based access control
+ *
+ * Example Usage:
+ *   auth() → Any logged-in user
+ *   auth("admin") → Admin only
+ *   auth("admin", "customer") → Specific roles allowed
+ */
+const auth = (...roles: ("admin" | "customer")[]) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
+      // ===============================
+      // AUTH HEADER VALIDATION
+      // ===============================
+      /**
+       * Check if Authorization header exists
+       * Expected format: Bearer <token>
+       */
       const authHeader = req.headers.authorization;
 
       if (!authHeader || !authHeader.startsWith("Bearer ")) {
         return res.status(401).json({
           success: false,
-          message: "Unauthorized",
+          message: "Unauthorized: No token provided",
         });
       }
+
+      // Extract token from header
       const token = authHeader.split(" ")[1];
 
-      // const token = req.headers.authorization;
-      // // console.log({ authToken: token });
-      // if (!token) {
-      //   return res.status(401).json({
-      //     message: "You are not authorized to access this resource",
-      //   });
-      // }
-
+      // ===============================
+      // JWT VERIFICATION
+      // ===============================
+      /**
+       * Verify token using JWT secret
+       * Decode payload and cast to typed user object
+       */
       const decoded = jwt.verify(
         token as string,
         config.jwtSecret as string,
-      ) as JwtPayload;
-      console.log({ decoded });
+      ) as JwtPayload & {
+        id: number;
+        name: string;
+        email: string;
+        role: "admin" | "customer";
+      };
+
+      // ===============================
+      // ATTACH USER TO REQUEST
+      // ===============================
+      /**
+       * Attach decoded user information
+       * Makes authenticated user available in controllers
+       */
       req.user = decoded;
 
-      if (roles.length && !roles.includes(decoded.role as string)) {
+      // ===============================
+      // ROLE-BASED ACCESS CONTROL
+      // ===============================
+      /**
+       * If roles are provided:
+       * - Check whether user's role is allowed
+       * - Deny access if role not included
+       */
+      if (roles.length && !roles.includes(decoded.role)) {
         return res.status(403).json({
           success: false,
-          message: "Forbidden",
+          message: "Forbidden: You do not have access to this resource",
         });
       }
-      // if (roles.length && !roles.includes(decoded.role as string)) {
-      //   return res.status(500).json({
-      //     message: "You are not authorized to access this resource",
-      //   });
-      // }
+
       next();
     } catch (err: any) {
+      // ===============================
+      // TOKEN ERROR HANDLING
+      // ===============================
+      /**
+       * Handles:
+       * - Invalid token
+       * - Expired token
+       * - Malformed token
+       */
       res.status(401).json({
         success: false,
-        message: err.message,
+        message: "Unauthorized: " + (err.message || "Invalid token"),
       });
     }
   };
